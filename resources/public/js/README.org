@@ -1,0 +1,1 @@
+Symlink this to the frontend dist folder

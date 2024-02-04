@@ -1,0 +1,12 @@
+classes
+.git
+*~
+.lsp/
+.clj-kondo/
+.cpcache/
+.nrepl-port
+.env*
+node_modules/
+dist/
+dist
+resources/public/js/*

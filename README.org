@@ -1,0 +1,60 @@
+* ~speakeasy~
+
+  TODO: change name to something and move gitlab.skynet repo (and local dir etc etc); homekey? passkey-lab?
+
+  The primary goal of ~speakeasy~ is to reduce the exposed attack surface for self hosted software. Replacing the full surface of
+  the backing server with the smaller surface of a reverse proxy and authentication server.
+
+** Considerations
+
+   1. It should be /fairly/ easy to put this auth server in front of any other self-hosted server.
+   2. The services protected by ~speakeasy~ aren't being intentionally, directly targeted. They may be scanned and attacked by bots or other automated tools.
+   3. The expected volume of requests is pretty low. A few to a few dozen users are expected.
+   4. There is less reason to identify each user since the server ~speakeasy~ is in front of will still want to identify the user.
+   5. Short lived JWTs (for some value of "short lived") reduce the need for revocations.
+   6. There is no admin. Anyone who can access the registration endpoints can register another key.
+   7. A long lived request can stay open after the token is invalid because auth is checked once per request.
+   8. Authenticator attestation is invasive. Any capable authenticator is probably fine.
+
+
+   TODO: describe how each consideration will be met or how it impacts the design of the auth server
+
+   https://research.kudelskisecurity.com/2020/02/12/fido2-deep-dive-attestations-trust-model-and-security/
+
+   https://developers.yubico.com/java-webauthn-server/JavaDoc/webauthn-server-core/2.5.0/com/yubico/webauthn/package-summary.html
+   https://research.kudelskisecurity.com/2020/02/12/fido2-deep-dive-attestations-trust-model-and-security/
+   It is important to be aware that requiring attestation is an invasive policy, especially when used to restrict users'
+   choice of authenticator. For some applications this is necessary; for most it is not. Similarly, attestation does not
+   automatically make your users more secure. Attestation gives you information, but you have to know what to do with that
+   information in order to get a security benefit from it; it is a powerful tool but does very little on its own.
+
+
+** Using ~speakeasy~
+
+*** ~speakeasy~ setup
+
+    TODO: Make speakeasy produce a production ready jar; put steps here to deploy it
+
+*** Redis setup
+
+    TODO: Suggest a process of setting up redis on the same host as the server
+
+*** Nginx setup
+
+    TODO: Nginx config
+
+    https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/
+    https://developer.okta.com/blog/2018/08/28/nginx-auth-request
+
+*** Let's Encrypt setup
+
+    TODO: How to setup Let's Encrypt for a typical linux distro (maybe just links out)
+
+*** Firewall thoughts
+
+    TODO: Suggest limiting all ports except 443 and a port for ssh that isn't 22
+
+*** Register the first key
+
+    TODO: Describe a process of something like ~ssh -L...~ to set the inital key by bypassing the nginx server
+
