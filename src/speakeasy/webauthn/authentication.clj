@@ -4,7 +4,7 @@
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
             [speakeasy.webauthn.relying-party :as rp])
-  (:import [com.yubico.webauthn.data PublicKeyCredential]
+  (:import [com.yubico.webauthn.data ByteArray PublicKeyCredential]
            [com.yubico.webauthn.exception AssertionFailedException]
            [java.security SecureRandom MessageDigest]))
 
@@ -17,14 +17,16 @@
 (defn random-handle []
   (let [b (byte-array 128)]
     (.nextBytes (SecureRandom.) b)
-    (sha256 b)))
+    (ByteArray. (.getBytes (sha256 b)))))
 
 (defn start [{{:keys [username]} :body-params :as request}]
   (try
     (let [redis (::redis/redis (::system/system request))
           relying-party (rp/relying-party redis)
-          user-handle (.orElse (.getUserHandleForUsername redis username)
-                               (random-handle))
+          user-handle (->> (.orElse (.getUserHandleForUsername redis username)
+                                    (random-handle))
+                           (.getBytes)
+                           (String.))
           auth-request (->> (rp/start-assertion-options username)
                             (.startAssertion relying-party))]
       (swap! authentication-requests-store assoc user-handle auth-request)

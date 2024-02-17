@@ -25,12 +25,12 @@
 
   (getUserHandleForUsername [_ username]
     (if username
-      (Optional/of (ByteArray. (.getBytes username)))
+      (Optional/of (ByteArray. (.getBytes "user-handle")))
       (Optional/empty)))
 
   (getUsernameForUserHandle [_ handle]
     (if handle
-      (Optional/of (String. (.getBytes handle)))
+      (Optional/of (String. (.getBytes "username")))
       (Optional/empty)))
 
   (lookup [_ cred-id user-handle]
@@ -83,7 +83,7 @@
       (let [response (call-api sut/start {:username "username"})
             opts (:opts (:body response))]
         (is (= (:status response) 200))
-        (is (= "username" (:user-handle (:body response))))
+        (is (= "user-handle" (:user-handle (:body response))))
         (is (= (get-in opts ["publicKey" "rpId"]) "localhost")))))
 
   (testing "`start` correctly stores auth start options when no username is present and multiple users start a ceremony"
