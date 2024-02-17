@@ -1,5 +1,6 @@
 (ns speakeasy.redis
   (:require [com.stuartsierra.component :as component]
+            [speakeasy.config :as config]
             [taoensso.carmine :as car])
   (:import [com.yubico.webauthn CredentialRepository RegisteredCredential]
            [com.yubico.webauthn.data AuthenticatorTransport ByteArray PublicKeyCredentialDescriptor PublicKeyCredentialType]
@@ -39,7 +40,7 @@
 ;; TODO: credential parser that knows which functions to run to encode/decode each key from redis
 ;; keeping them next to each other should make it easy to keep them up to date
 
-(defrecord RedisStore [redis-config]
+(defrecord RedisStore [config redis-config]
   component/Lifecycle
   WebAuthnStore
   CredentialRepository
@@ -49,7 +50,8 @@
   ;; -----
 
   (start [component]
-    (assoc-in component [:redis-config :pool] (car/connection-pool {})))
+    (-> (assoc-in component [:redis-config :pool] (car/connection-pool {}))
+        (assoc-in [:redis-config :uri] (::config/redis-url config))))
 
   (stop [component]
     (.close (:pool (:redis-config component)))
@@ -98,7 +100,7 @@
            (car/get (format redis-key-fmt :sig-count))
            (car/get (format redis-key-fmt :discoverable?))
            (car/get (format redis-key-fmt :user-verified?)))]
-      
+
       (if (and cose type)
         {::cose cose
          ::type type
@@ -201,5 +203,3 @@
               build)}
         #{}))))
 
-(defn new-component [uri]
-  (->RedisStore {:uri uri}))

@@ -23,21 +23,22 @@
       build))
 
 ;; TODO: make the origin flexible
-(defn relying-party-id []
+(defn relying-party-id [hostname]
   (.. RelyingPartyIdentity
       builder
-      (id "localhost")
-      (name "localhost")
+      (id hostname)
+      (name hostname)
       build))
 
 ;; TODO: make the origin flexible
-(defn relying-party [redis]
-  (let [relying-party-id (relying-party-id)
+(defn relying-party [redis hostname]
+  (let [relying-party-id (relying-party-id hostname)
         relying-party (.. RelyingParty
                           builder
                           (identity relying-party-id)
                           (credentialRepository redis)
-                          (origins #{"http://localhost:3000" "http://localhost"})
+                          (origins #{(format "http://%s:3000" hostname)
+                                     (format "http://%s" hostname)})
                           build)]
     relying-party))
 

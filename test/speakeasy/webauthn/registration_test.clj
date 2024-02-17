@@ -1,5 +1,6 @@
 (ns speakeasy.webauthn.registration-test
   (:require [clojure.test :refer [deftest testing is are]]
+            [speakeasy.config :as config]
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
             [speakeasy.webauthn.registration :as sut]
@@ -44,7 +45,8 @@
    (call-api api-fn body-params (->RedisStore nil)))
 
   ([api-fn body-params redis-store]
-   (api-fn {::system/system {::redis/redis redis-store}
+   (api-fn {::system/system {::config/config {::config/hostname "localhost"}
+                             ::redis/redis redis-store}
             :body-params body-params})))
 
 (deftest sha256
@@ -98,7 +100,7 @@
   (testing "registration failure due to RegistrationFailedException"
     (let [_ (reset! sut/registration-options-store {"user-handle" {:username "username" :opts "mock-opts"}})
           store (atom {})
-          ceremony-result (fn [_ _ _] (throw (RegistrationFailedException. (IllegalArgumentException. "such failure"))))
+          ceremony-result (fn [_ _ _ _] (throw (RegistrationFailedException. (IllegalArgumentException. "such failure"))))
           user-handle (redis/->b64 (.getBytes "user-handle"))
           response (call-api (sut/complete ceremony-result) {:user-handle user-handle :public-key-data "mock-public-key-data"} (->RedisStore store))]
 
@@ -114,7 +116,7 @@
   (testing "registration success"
     (let [_ (reset! sut/registration-options-store {"user-handle" {:username "username" :opts "mock-opts"}})
           store (atom {})
-          ceremony-result (fn [_ _ _] "mock-result")
+          ceremony-result (fn [_ _ _ _] "mock-result")
           user-handle (redis/->b64 (.getBytes "user-handle"))
           response (call-api (sut/complete ceremony-result) {:user-handle user-handle :public-key-data "mock-public-key-data"} (->RedisStore store))]
 
@@ -147,7 +149,7 @@
           cred-id "YV-CkfpoooeiaZOesxFxDU0nOtD9IJDI2WKGXV5y67M"
           pkcco (.. PublicKeyCredentialCreationOptions
                     builder
-                    (rp (data/relying-party-id))
+                    (rp (data/relying-party-id "localhost"))
                     (user (data/user-identity username display-name (.getBytes user-handle)))
                     (challenge (ByteArray. challenge-bytes))
                     (pubKeyCredParams (map build-public-key-credential-parameters [-7 -35 -36 -257 -258 -259]))

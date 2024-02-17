@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [com.stuartsierra.component :as component]
             [muuntaja.core]
+            [speakeasy.config :as config]
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
             [speakeasy.server :as server]
@@ -52,11 +53,16 @@
 
    (ring/create-default-handler)))
 
-(defn generate-system [join-server?]
+(defn generate-system []
   (component/system-map
-   ::server/server (server/new-component 3000 join-server? (app))
-   ;; TODO: I think to start this prod style the server will have to depend on redis (since the server will cause us to join)
-   ::redis/redis (redis/new-component "redis://localhost:6379")))
+   ::config/config (config/->Config config/config-map)
+   ::redis/redis (component/using
+                  (redis/map->RedisStore {})
+                  {:config ::config/config})
+   ::server/server (component/using
+                    (server/map->Server {:app (app)})
+                    {:config ::config/config
+                     :redis ::redis/redis})))
 
 (defn -main [& _]
-  (reset! system (component/start (generate-system true))))
+  (reset! system (component/start (generate-system))))

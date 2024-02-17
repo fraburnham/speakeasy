@@ -47,13 +47,24 @@
 
 (deftest relying-party
   (testing "relying-party builds RelyingPartyIdentiy correctly"
-    (let [rpid (.getIdentity (sut/relying-party (->RedisStore {})))]
-      (is (= (.getId rpid) "localhost"))
-      (is (= (.getName rpid) "localhost"))))
+    (are [hostname]
+         (let [rpid (.getIdentity (sut/relying-party (->RedisStore {}) hostname))]
+           (and (= (.getId rpid) hostname)
+                (= (.getName rpid) hostname)))
+      "localhost"
+      "example.com"
+      "subdomain.example.com"
+      "etc.etc.etc"))
 
   (testing "relying-party builds RelyingParty correctly"
-    (let [rp (sut/relying-party (->RedisStore {}))]
-      (is (= (.getOrigins rp) #{"http://localhost:3000" "http://localhost"})))))
+    (are [hostname]
+         (let [rp (sut/relying-party (->RedisStore {}) hostname)]
+           (= (.getOrigins rp) #{(format "http://%s:3000" hostname)
+                                 (format "http://%s" hostname)}))
+      "localhost"
+      "example.com"
+      "subdomain.example.com"
+      "mock.etc.mock.etc")))
 
 (deftest start-registration-options
   (let [start-reg-opts (sut/start-registration-options mock-user)]
@@ -70,7 +81,7 @@
         (is (not (.. auth-selection getAuthenticatorAttachment isPresent)))))))
 
 (deftest finish-registraiton-options
-  (let [rpid (.getIdentity (sut/relying-party (->RedisStore {})))
+  (let [rpid (.getIdentity (sut/relying-party (->RedisStore {}) "localhost"))
         start-reg-opts (.. PublicKeyCredentialCreationOptions
                            builder
                            (rp rpid)
