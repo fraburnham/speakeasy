@@ -21,27 +21,25 @@
   ;; TODO: don't let stacktraces get to the client
   (ring/ring-handler
    (ring/router
-    [["/resources/*" (ring/create-resource-handler)]
+    ["/speakeasy"
+     ["" (fn [_] {:status 200
+                  :body html/page})]
 
-     ["/authenticate" {:tags #{:register}}
-      ["" (fn [_] {:status 200
-                   :body (html/page html/authenticate-form)})]
+     [["/resources/*" (ring/create-resource-handler)]
 
       ["/check" authentication/check]
 
-      ["/start" {:post {:handler authentication/start}}]
+      ["/authenticate" {:tags #{:register}}
+       ["/start" {:post {:handler authentication/start}}]
 
-      ["/complete" {:post {:parameters {:body {:user-handle string?}}
-                           :handler (authentication/complete authentication/ceremony-result)}}]]
+       ["/complete" {:post {:parameters {:body {:user-handle string?}}
+                            :handler (authentication/complete authentication/ceremony-result)}}]]
 
-     ["/register" {:tags #{:register}}
-      ["" (fn [_] {:status 200
-                   :body (html/page html/register-form)})]
+      ["/register" {:tags #{:register}}
+       ["/start" {:post {:handler registration/start}}]
 
-      ["/start" {:post {:handler registration/start}}]
-
-      ["/complete" {:post {:parameters {:body {:user-handle string?}}
-                           :handler (registration/complete registration/ceremony-result)}}]]]
+       ["/complete" {:post {:parameters {:body {:user-handle string?}}
+                            :handler (registration/complete registration/ceremony-result)}}]]]]
 
     {:data {:coercion reitit.coercion.spec/coercion
             :muuntaja muuntaja.core/instance

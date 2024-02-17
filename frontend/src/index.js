@@ -4,7 +4,7 @@ import * as webauthnJson from "@github/webauthn-json/browser-ponyfill";
 
 function register(event) {
     const btn = event.target;
-    fetch("/register/start", {
+    fetch("/speakeasy/register/start", {
 	method: "POST",
 	headers: {
 	    'Accept': 'application/json',
@@ -13,7 +13,7 @@ function register(event) {
     }).then((r) => r.json()).then((registrationResponse) => {
 	const opts = webauthnJson.parseCreationOptionsFromJSON(registrationResponse);
 	webauthnJson.create(opts).then((resp) => {
-	    fetch("/register/complete", {
+	    fetch("/speakeasy/register/complete", {
 		method: "POST",
 		headers: {
 		    'Accept': 'application/json',
@@ -36,7 +36,7 @@ function register(event) {
 }
 
 function authenticate(event) {
-    fetch("/authenticate/start", {
+    fetch("/speakeasy/authenticate/start", {
 	method: "POST",
 	headers: {
 	    "Accept": "application/json",
@@ -44,7 +44,7 @@ function authenticate(event) {
 	}
     }).then((r) => r.json()).then((credOpts) => {
 	webauthnJson.get(webauthnJson.parseRequestOptionsFromJSON(credOpts.opts)).then((resp) => {
-	    fetch("/authenticate/complete", {
+	    fetch("/speakeasy/authenticate/complete", {
 		method: "POST",
 		headers: {
 		    'Accept': 'application/json',
