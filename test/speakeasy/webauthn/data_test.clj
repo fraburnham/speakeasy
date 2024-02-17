@@ -1,6 +1,6 @@
-(ns speakeasy.webauthn.relying-party-test
+(ns speakeasy.webauthn.data-test
   (:require [clojure.test :refer [deftest testing is are]]
-            [speakeasy.webauthn.relying-party :as sut])
+            [speakeasy.webauthn.data :as sut])
     (:import [com.yubico.webauthn AssertionRequest CredentialRepository]
              [com.yubico.webauthn.data
               AuthenticatorResponse

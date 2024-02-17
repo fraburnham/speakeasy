@@ -1,5 +1,5 @@
 ;; TODO: rename to speakeasy.webauthn.data
-(ns speakeasy.webauthn.relying-party
+(ns speakeasy.webauthn.data
   (:import [com.yubico.webauthn
             FinishAssertionOptions
             FinishRegistrationOptions

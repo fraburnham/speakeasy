@@ -3,7 +3,7 @@
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
             [speakeasy.webauthn.registration :as sut]
-            [speakeasy.webauthn.relying-party :as rp])
+            [speakeasy.webauthn.data :as data])
   (:import [com.yubico.webauthn CredentialRepository]
            [com.yubico.webauthn.data ByteArray COSEAlgorithmIdentifier PublicKeyCredentialCreationOptions PublicKeyCredentialParameters]
            [com.yubico.webauthn.exception RegistrationFailedException]
@@ -21,7 +21,6 @@
   (update-credential [_ _])
 
   (getCredentialIdsForUsername [_ _]
-    (println "creds for username")
     #{})
 
   (getUserHandleForUsername [_ username]
@@ -35,11 +34,9 @@
       (Optional/empty)))
 
   (lookup [_ _ _]
-    (println "lookup")
     (Optional/empty))
 
   (lookupAll [_ _]
-    (println "lookupAll")
     #{}))
 
 (defn call-api
@@ -150,8 +147,8 @@
           cred-id "YV-CkfpoooeiaZOesxFxDU0nOtD9IJDI2WKGXV5y67M"
           pkcco (.. PublicKeyCredentialCreationOptions
                     builder
-                    (rp (rp/relying-party-id))
-                    (user (rp/user-identity username display-name (.getBytes user-handle)))
+                    (rp (data/relying-party-id))
+                    (user (data/user-identity username display-name (.getBytes user-handle)))
                     (challenge (ByteArray. challenge-bytes))
                     (pubKeyCredParams (map build-public-key-credential-parameters [-7 -35 -36 -257 -258 -259]))
                     build)

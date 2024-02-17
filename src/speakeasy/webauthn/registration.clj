@@ -3,7 +3,7 @@
             [speakeasy.jwt :as jwt]
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
-            [speakeasy.webauthn.relying-party :as rp])
+            [speakeasy.webauthn.data :as data])
   (:import [com.yubico.webauthn.data PublicKeyCredential]
            [com.yubico.webauthn.exception RegistrationFailedException]
            [java.security SecureRandom MessageDigest]
@@ -27,9 +27,9 @@
     (let [redis (::redis/redis (::system/system request))
           user-handle (random-handle)
           username (or username user-handle)
-          relying-party (rp/relying-party redis)
-          user-id (rp/user-identity username display-name (.getBytes user-handle))
-          registration-options (->> (rp/start-registration-options user-id)
+          relying-party (data/relying-party redis)
+          user-id (data/user-identity username display-name (.getBytes user-handle))
+          registration-options (->> (data/start-registration-options user-id)
                                     (.startRegistration relying-party))]
 
       (swap! registration-options-store
@@ -48,8 +48,8 @@
 (defn ceremony-result [redis reg-options public-key-data]
   (let [public-key-cred (PublicKeyCredential/parseRegistrationResponseJson (json/write-str public-key-data))]
     (.finishRegistration
-     (rp/relying-party redis)
-     (rp/finish-registration-options reg-options public-key-cred))))
+     (data/relying-party redis)
+     (data/finish-registration-options reg-options public-key-cred))))
 
 (defn complete [ceremony-result]
   (fn [{{:keys [user-handle public-key-data]} :body-params :as request}]

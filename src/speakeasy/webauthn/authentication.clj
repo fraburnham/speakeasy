@@ -3,7 +3,7 @@
             [speakeasy.jwt :as jwt]
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
-            [speakeasy.webauthn.relying-party :as rp])
+            [speakeasy.webauthn.data :as data])
   (:import [com.yubico.webauthn.data ByteArray PublicKeyCredential]
            [com.yubico.webauthn.exception AssertionFailedException]
            [java.security SecureRandom MessageDigest]))
@@ -22,12 +22,12 @@
 (defn start [{{:keys [username]} :body-params :as request}]
   (try
     (let [redis (::redis/redis (::system/system request))
-          relying-party (rp/relying-party redis)
+          relying-party (data/relying-party redis)
           user-handle (->> (.orElse (.getUserHandleForUsername redis username)
                                     (random-handle))
                            (.getBytes)
                            (String.))
-          auth-request (->> (rp/start-assertion-options username)
+          auth-request (->> (data/start-assertion-options username)
                             (.startAssertion relying-party))]
       (swap! authentication-requests-store assoc user-handle auth-request)
       {:status 200 :body {:user-handle user-handle
@@ -40,9 +40,9 @@
       {:status 500})))
 
 (defn ceremony-result [redis public-key-data auth-request]
-  (let [relying-party (rp/relying-party redis)
+  (let [relying-party (data/relying-party redis)
         public-key-cred (PublicKeyCredential/parseAssertionResponseJson (json/write-str public-key-data))
-        assertion-options (rp/finish-assertion-options auth-request public-key-cred)
+        assertion-options (data/finish-assertion-options auth-request public-key-cred)
         result (.finishAssertion relying-party assertion-options)]
     {:success? (.isSuccess result)
      :result result}))
