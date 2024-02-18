@@ -6,7 +6,6 @@ classes
 .cpcache/
 .nrepl-port
 .env*
-node_modules/
-dist/
-dist
-resources/public/js/*
+**/node_modules
+**/dist
+resources/public/js

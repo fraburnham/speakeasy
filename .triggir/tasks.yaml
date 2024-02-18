@@ -15,4 +15,3 @@
     git remote add github git@github.com:fraburnham/speakeasy
     git push github "$CHECKOUT_SHA":refs/heads/main
     git push github --tags
-
