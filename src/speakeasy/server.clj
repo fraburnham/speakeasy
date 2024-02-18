@@ -8,7 +8,7 @@
 
   (start [component]
     (assoc component :server (jetty/run-jetty app {:port (::config/port config)
-                                                   :join? (not= :dev (::config/env config))})))
+                                                   :join? false})))
 
   (stop [{:keys [server] :as component}]
     (.stop server)
