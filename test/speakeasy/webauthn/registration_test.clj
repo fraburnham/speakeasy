@@ -1,13 +1,17 @@
 (ns speakeasy.webauthn.registration-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.data.json :as json]
+            [clojure.test :refer [deftest testing is are]]
             [speakeasy.config :as config]
             [speakeasy.middleware.system :as system]
             [speakeasy.redis :as redis]
             [speakeasy.webauthn.registration :as sut]
-            [speakeasy.webauthn.data :as data])
+            [speakeasy.webauthn.data :as data]
+            [speakeasy.jwt :as jwt])
   (:import [com.yubico.webauthn CredentialRepository]
            [com.yubico.webauthn.data ByteArray COSEAlgorithmIdentifier PublicKeyCredentialCreationOptions PublicKeyCredentialParameters]
            [com.yubico.webauthn.exception RegistrationFailedException]
+           [java.time Instant]
+           [java.time.temporal ChronoUnit]
            [java.util Base64 Optional]))
 
 (defrecord RedisStore [store]
@@ -40,12 +44,16 @@
   (lookupAll [_ _]
     #{}))
 
+(defn approx= [a b alpha]
+  (< (abs (- a b)) alpha))
+
 (defn call-api
   ([api-fn body-params]
    (call-api api-fn body-params (->RedisStore nil)))
 
   ([api-fn body-params redis-store]
-   (api-fn {::system/system {::config/config {::config/hostname "localhost"}
+   (api-fn {::system/system {::config/config {::config/hostname "localhost"
+                                              ::config/jwt-timeout-mins 15}
                              ::redis/redis redis-store}
             :body-params body-params})))
 
@@ -127,7 +135,18 @@
         (is (= (:status response) 201)))
 
       (testing "returns cookie"
-        (is (seq (get-in response [:cookies "speakeasy-token" :value]))))
+        (is (seq (get-in response [:cookies "speakeasy-token" :value])))
+        (let [payload (->> (get-in response [:cookies "speakeasy-token" :value])
+                           jwt/decode
+                           (.getPayload)
+                           (.decode (Base64/getDecoder))
+                           (String.)
+                           json/read-str)
+              expected-exp-time (.. (Instant/now)
+                                    (plus 15 (ChronoUnit/valueOf "MINUTES"))
+                                    getEpochSecond)]
+          (is (= (payload "iss") "speakeasy"))
+          (is (approx= (payload "exp") expected-exp-time 1))))
 
       (testing "stores registered credential"
         (is (@store "user-handle"))))))

@@ -59,7 +59,10 @@
           (do
             (redis/update-credential redis result)
             {:status 200
-             :cookies {"speakeasy-token" {:value (jwt/token 60) :secure true :http-only true :path "/"}}})
+             :cookies {"speakeasy-token" {:value (jwt/token (get-in request [::system/system ::config/config ::config/jwt-timeout-mins]))
+                                          :secure true
+                                          :http-only true
+                                          :path "/"}}})
           {:status 401}))
       (catch AssertionFailedException e
         (println e)

@@ -65,7 +65,10 @@
           (redis/store-user-handle redis username user-handle)
           (redis/store-credential redis user-handle registration-result)
           {:status 201
-           :cookies {"speakeasy-token" {:value (jwt/token 60) :secure true :http-only true :path "/"}}})
+           :cookies {"speakeasy-token" {:value (jwt/token (get-in request [::system/system ::config/config ::config/jwt-timeout-mins]))
+                                        :secure true
+                                        :http-only true
+                                        :path "/"}}})
 
         (catch RegistrationFailedException e
           ;; TODO: logging

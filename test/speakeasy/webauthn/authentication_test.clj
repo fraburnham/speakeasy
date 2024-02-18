@@ -1,5 +1,6 @@
 (ns speakeasy.webauthn.authentication-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.data.json :as json]
+            [clojure.test :refer [deftest testing is are]]
             [speakeasy.config :as config]
             [speakeasy.jwt :as jwt]
             [speakeasy.middleware.system :as system]
@@ -8,6 +9,8 @@
   (:import [com.yubico.webauthn AssertionRequest CredentialRepository RegisteredCredential]
            [com.yubico.webauthn.data ByteArray PublicKeyCredentialRequestOptions]
            [com.yubico.webauthn.exception AssertionFailedException]
+           [java.time Instant]
+           [java.time.temporal ChronoUnit]
            [java.util Base64 Optional]))
 
 (defrecord RedisStore [store]
@@ -63,12 +66,16 @@
   (lookupAll [_ _]
     #{}))
 
+(defn approx= [a b alpha]
+  (< (abs (- a b)) alpha))
+
 (defn call-api
   ([api-fn body-params]
    (call-api api-fn body-params (->RedisStore nil)))
 
   ([api-fn body-params redis-store]
-   (api-fn {::system/system {::config/config {::config/hostname "localhost"}
+   (api-fn {::system/system {::config/config {::config/hostname "localhost"
+                                              ::config/jwt-timeout-mins 12}
                              ::redis/redis redis-store}
             :body-params body-params})))
 
@@ -115,7 +122,18 @@
         (is (= (:status response) 200)))
 
       (testing "and returns a cookie"
-        (is (seq (get-in response [:cookies "speakeasy-token" :value]))))
+        (is (seq (get-in response [:cookies "speakeasy-token" :value])))
+        (let [payload (->> (get-in response [:cookies "speakeasy-token" :value])
+                           jwt/decode
+                           (.getPayload)
+                           (.decode (Base64/getDecoder))
+                           (String.)
+                           json/read-str)
+              expected-exp-time (.. (Instant/now)
+                                    (plus 12 (ChronoUnit/valueOf "MINUTES"))
+                                    getEpochSecond)]
+          (is (= (payload "iss") "speakeasy"))
+          (is (approx= (payload "exp") expected-exp-time 1))))
 
       (testing "and updates a database store"
         (is (= (count @store) 1)))
