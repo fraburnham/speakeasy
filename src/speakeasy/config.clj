@@ -27,7 +27,7 @@
                 ::default "redis://localhost:6379"}
 
    ::jwt-timeout-mins {::env-var "SPEAKEASY_JWT_TIMEOUT_MINS"
-                       ::env-parser #(Integer/parseInt %)
+                       ::env-parser #(Long/parseLong %)
                        ::config-location [:jwt-timeout-mins]
                        ::default 60}})
 
