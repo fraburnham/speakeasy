@@ -1,7 +1,5 @@
 * ~speakeasy~
 
-  TODO: change name to something and move gitlab.skynet repo (and local dir etc etc); homekey? passkey-lab?
-
   The primary goal of ~speakeasy~ is to reduce the exposed attack surface for self hosted software. Replacing the full surface of
   the backing server with the smaller surface of a reverse proxy and authentication server.
 
@@ -16,18 +14,16 @@
    7. A long lived request can stay open after the token is invalid because auth is checked once per request.
    8. Authenticator attestation is invasive. Any capable authenticator is probably fine.
 
+** ~docker compose~ demo
 
-   TODO: describe how each consideration will be met or how it impacts the design of the auth server
-
-   https://research.kudelskisecurity.com/2020/02/12/fido2-deep-dive-attestations-trust-model-and-security/
-
-   https://developers.yubico.com/java-webauthn-server/JavaDoc/webauthn-server-core/2.5.0/com/yubico/webauthn/package-summary.html
-   https://research.kudelskisecurity.com/2020/02/12/fido2-deep-dive-attestations-trust-model-and-security/
-   It is important to be aware that requiring attestation is an invasive policy, especially when used to restrict users'
-   choice of authenticator. For some applications this is necessary; for most it is not. Similarly, attestation does not
-   automatically make your users more secure. Attestation gives you information, but you have to know what to do with that
-   information in order to get a security benefit from it; it is a powerful tool but does very little on its own.
-
+   1. Start the servers with ~docker compose up -d~
+   2. Visit http://localhost:3000/speakeasy to register a key
+      1. Trying to register from http://localhost/speakeasy should result in error/failure
+   3. Visit http://localhost/ and see the backend (example.com)
+   4. Delete the cookie ~speakeasy-token~
+   5. Visit http://localhost/ and see the speakeasy page
+   6. Authenticate
+   7. Visit http://localhost/ and see the backend
 
 ** Using ~speakeasy~
 

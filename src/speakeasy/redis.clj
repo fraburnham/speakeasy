@@ -51,7 +51,7 @@
 
   (start [component]
     (-> (assoc-in component [:redis-config :pool] (car/connection-pool {}))
-        (assoc-in [:redis-config :uri] (::config/redis-url config))))
+        (assoc-in [:redis-config :spec :uri] (::config/redis-url config))))
 
   (stop [component]
     (.close (:pool (:redis-config component)))

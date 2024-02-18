@@ -7,12 +7,22 @@ services:
     ports:
       - "6379:6379"
 
+  speakeasy:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      SPEAKEASY_HOSTNAME: "localhost"
+      SPEAKEASY_PORT: "3000"
+      SPEAKEASY_ENV: "docker-compose"
+      SPEAKEASY_REDIS_URL: "redis://redis:6379"
+      SPEAKEASY_JWT_TIMEOUT_MINS: "5"
+
   nginx:
-    network_mode: host
     image: nginx:alpine
     restart: always
-    # ports:
-    #   - "4000:80"
+    ports:
+      - "80:80"
     volumes:
       - ${PWD}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-
+      - ${PWD}/nginx/speakeasy.conf:/etc/nginx/speakeasy.conf:ro
