@@ -1,0 +1,14 @@
+[Unit]
+Description=speakeasy auth server
+After=network.target
+Before=nginx.service
+
+[Service]
+Environment="SPEAKEASY_EDN_FILE=/some/path/to/speakeasy.edn"
+ExecStart=java -jar /some/path/to/speakeasy.jar
+Type=exec
+Restart=always
+
+[Install]
+WantedBy=default.target
+RequiredBy=network.target

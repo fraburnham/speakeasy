@@ -25,30 +25,47 @@
    6. Authenticate
    7. Visit http://localhost/ and see the backend
 
-** Using ~speakeasy~
+** Setup
 
-*** ~speakeasy~ setup
+*** Firewall setup
 
-    TODO: Make speakeasy produce a production ready jar; put steps here to deploy it
+    * https://nftables.org/
+    * https://help.ubuntu.com/community/UFW
+    * https://firewalld.org/
 
-*** Redis setup
-
-    TODO: Suggest a process of setting up redis on the same host as the server
+    Allow traffic in on ports 80 & 443 from any address. Allow traffic in to your ssh port from only an internal subnet if possible. Optionally block all 
+    outbound traffic that isn't going to the expected backend ip(s).
 
 *** Nginx setup
 
-    TODO: Nginx config
+    * ~nginx/nginx.conf~ and ~nginx/speakeasy.conf~ in this repo
+    * https://www.nginx.com/resources/wiki/start/topics/examples/full/
 
-    https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-subrequest-authentication/
-    https://developer.okta.com/blog/2018/08/28/nginx-auth-request
+    Include the ~speakeasy.conf~ at the top of each ~server~ block. Then add ~auth_request /speakeasy/check;~ and ~auth_request_set $auth_status $upstream_status~
+    in each location that should require authentication.
+
+    If you're using SELinux you may need ~setsebool -P httpd_can_network_connect 1~. Check ~sudo cat /var/log/audit/audit.log | grep nginx | grep denied~ for errors.
 
 *** Let's Encrypt setup
 
-    TODO: How to setup Let's Encrypt for a typical linux distro (maybe just links out)
+    * https://certbot.eff.org/instructions
 
-*** Firewall thoughts
+*** Redis setup
 
-    TODO: Suggest limiting all ports except 443 and a port for ssh that isn't 22
+    Install redis on the same host as ~speakeasy~, use ~protected-mode~ and only bind to localhost.
+
+*** ~speakeasy~ setup (systemd)
+
+    1. Install java and clojure
+       1. https://openjdk.org/
+       2. https://clojure.org/guides/install_clojure
+    2. ~build.sh~ to prepare an uberjar
+    3. Copy ~systemd/speakeasy.service~ to ~/etc/systemd/system/~
+    4. ~sudo systemctl daemon-reload~
+    5. ~sudo systemctl enable speakeasy~
+    6. ~sudo systemctl start speakeasy~
+
+** Usage
 
 *** Register the first key
 

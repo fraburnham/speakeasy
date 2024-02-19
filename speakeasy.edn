@@ -1,0 +1,5 @@
+{:hostname "localhost"
+ :port 3000
+ :env :dev
+ :redis-url "redis://localhost:6379"
+ :jwt-timeout-mins 60}
