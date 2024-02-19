@@ -1,4 +1,3 @@
-;; TODO: rename to speakeasy.webauthn.data
 (ns speakeasy.webauthn.data
   (:import [com.yubico.webauthn
             FinishAssertionOptions
@@ -22,7 +21,6 @@
       (userVerification (UserVerificationRequirement/valueOf "REQUIRED"))
       build))
 
-;; TODO: make the origin flexible
 (defn relying-party-id [hostname]
   (.. RelyingPartyIdentity
       builder
@@ -30,7 +28,6 @@
       (name hostname)
       build))
 
-;; TODO: make the origin flexible
 (defn relying-party [redis hostname]
   (let [relying-party-id (relying-party-id hostname)
         relying-party (.. RelyingParty
@@ -38,7 +35,8 @@
                           (identity relying-party-id)
                           (credentialRepository redis)
                           (origins #{(format "http://%s:3000" hostname)
-                                     (format "http://%s" hostname)})
+                                     (format "http://%s" hostname)
+                                     (format "https://%s" hostname)})
                           build)]
     relying-party))
 

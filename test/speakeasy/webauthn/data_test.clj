@@ -60,7 +60,8 @@
     (are [hostname]
          (let [rp (sut/relying-party (->RedisStore {}) hostname)]
            (= (.getOrigins rp) #{(format "http://%s:3000" hostname)
-                                 (format "http://%s" hostname)}))
+                                 (format "http://%s" hostname)
+                                 (format "https://%s" hostname)}))
       "localhost"
       "example.com"
       "subdomain.example.com"

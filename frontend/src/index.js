@@ -77,4 +77,3 @@ window.addEventListener("load", function() {
     regBtn && regBtn.addEventListener("click", register);
     passkeyBtn && passkeyBtn.addEventListener("click", authenticate);
 });
-
