@@ -69,5 +69,14 @@
 
 *** Register the first key
 
-    TODO: Describe a process of something like ~ssh -L...~ to set the inital key by bypassing the nginx server
+    1. Remove the ~auth_*~ lines from the location block that has ~/speakeasy/register~ in ~nginx.conf~ and reload nginx
+    2. Register a key by visiting ~/speakeasy~
+    3. Revert the ~nginx.conf~ change and reload nginx
 
+
+    Subsequent keys can be registered by any authenticated user visiting ~/speakeasy~ and using the registration button.
+
+*** Authentication
+
+    The auth page should automatically show up for anyone who isn't authenticated. After authenticating reloading the page should take them
+    to the application.
