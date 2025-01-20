@@ -52,10 +52,11 @@
    (call-api api-fn body-params (->RedisStore nil)))
 
   ([api-fn body-params redis-store]
-   (api-fn {::system/system {::config/config {::config/hostname "localhost"
+   (api-fn {::system/system {::config/config {::config/relying-party-id "localhost"
                                               ::config/jwt-timeout-mins 15}
                              ::redis/redis redis-store}
-            :body-params body-params})))
+            :body-params body-params
+            :headers {"origin" "http://localhost:3000"}})))
 
 (deftest sha256
   (testing "correctly generates sha256 hex output"
@@ -108,7 +109,7 @@
   (testing "registration failure due to RegistrationFailedException"
     (let [_ (reset! sut/registration-options-store {"user-handle" {:username "username" :opts "mock-opts"}})
           store (atom {})
-          ceremony-result (fn [_ _ _ _] (throw (RegistrationFailedException. (IllegalArgumentException. "such failure"))))
+          ceremony-result (fn [_ _ _ _ _] (throw (RegistrationFailedException. (IllegalArgumentException. "such failure"))))
           user-handle (redis/->b64 (.getBytes "user-handle"))
           response (call-api (sut/complete ceremony-result) {:user-handle user-handle :public-key-data "mock-public-key-data"} (->RedisStore store))]
 
@@ -124,7 +125,7 @@
   (testing "registration success"
     (let [_ (reset! sut/registration-options-store {"user-handle" {:username "username" :opts "mock-opts"}})
           store (atom {})
-          ceremony-result (fn [_ _ _ _] "mock-result")
+          ceremony-result (fn [_ _ _ _ _] "mock-result")
           user-handle (redis/->b64 (.getBytes "user-handle"))
           response (call-api (sut/complete ceremony-result) {:user-handle user-handle :public-key-data "mock-public-key-data"} (->RedisStore store))]
 

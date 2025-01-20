@@ -28,15 +28,13 @@
       (name hostname)
       build))
 
-(defn relying-party [redis hostname]
-  (let [relying-party-id (relying-party-id hostname)
+(defn relying-party [redis relying-party-id-domain origin]
+  (let [relying-party-id (relying-party-id relying-party-id-domain)
         relying-party (.. RelyingParty
                           builder
                           (identity relying-party-id)
                           (credentialRepository redis)
-                          (origins #{(format "http://%s:3000" hostname)
-                                     (format "http://%s" hostname)
-                                     (format "https://%s" hostname)})
+                          (origins #{origin})
                           build)]
     relying-party))
 

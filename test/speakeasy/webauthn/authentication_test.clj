@@ -74,10 +74,11 @@
    (call-api api-fn body-params (->RedisStore nil)))
 
   ([api-fn body-params redis-store]
-   (api-fn {::system/system {::config/config {::config/hostname "localhost"
+   (api-fn {::system/system {::config/config {::config/relying-party-id "localhost"
                                               ::config/jwt-timeout-mins 12}
                              ::redis/redis redis-store}
-            :body-params body-params})))
+            :body-params body-params
+            :headers {"origin" "http://localhost:3000"}})))
 
 (deftest start
   (testing "`start` returns a json that clients can use to start a ceremony"
@@ -114,7 +115,7 @@
 (deftest complete
   (testing "auth succeeds"
     (reset! sut/authentication-requests-store {"user-handle" "auth-request-data-mock"})
-    (let [complete (sut/complete (fn [_ _ _ _] {:success? true :data "some-data"}))
+    (let [complete (sut/complete (fn [_ _ _ _ _] {:success? true :data "some-data"}))
           store (atom [])
           response (call-api complete {:user-handle "user-handle" :public-key-data "mock-data-this-would-be-a-json"} (->RedisStore store))]
 
@@ -142,7 +143,7 @@
         (is (nil? (@sut/authentication-requests-store "user-handle"))))))
 
   (testing "auth fails"
-    (let [complete (sut/complete (fn [_ _ _ _] {:success? false}))
+    (let [complete (sut/complete (fn [_ _ _ _ _] {:success? false}))
           response (call-api complete {:user-handle "user-handle" :public-key-data "mock-data-this-would-be-a-json"})]
 
       (testing "and returns 401"
@@ -152,7 +153,7 @@
         (is (empty? (get-in response [:cookies "speakeasy-token" :value]))))))
 
   (testing "auth fails due to AssertionFailedException"
-    (let [complete (sut/complete (fn [_ _ _ _] (throw (AssertionFailedException. "OH NO"))))
+    (let [complete (sut/complete (fn [_ _ _ _ _] (throw (AssertionFailedException. "OH NO"))))
           response (call-api complete {:user-handle "user-handle" :public-key-data "mock-data-this-would-be-a-json"})]
 
       (testing "and returns 401"

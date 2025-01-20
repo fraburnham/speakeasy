@@ -23,7 +23,9 @@
 (defn start [{{:keys [username]} :body-params :as request}]
   (try
     (let [redis (::redis/redis (::system/system request))
-          relying-party (data/relying-party redis (get-in request [::system/system ::config/config ::config/hostname]))
+          relying-party (data/relying-party redis
+                                            (get-in request [::system/system ::config/config ::config/relying-party-id])
+                                            (get-in request [:headers "origin"]))
           user-handle (->> (.orElse (.getUserHandleForUsername redis username)
                                     (random-handle))
                            (.getBytes)
@@ -40,8 +42,8 @@
       (println e)
       {:status 500})))
 
-(defn ceremony-result [redis hostname public-key-data auth-request]
-  (let [relying-party (data/relying-party redis hostname)
+(defn ceremony-result [redis relying-party-id hostnames public-key-data auth-request]
+  (let [relying-party (data/relying-party redis relying-party-id hostnames)
         public-key-cred (PublicKeyCredential/parseAssertionResponseJson (json/write-str public-key-data))
         assertion-options (data/finish-assertion-options auth-request public-key-cred)
         result (.finishAssertion relying-party assertion-options)]
@@ -54,7 +56,11 @@
       (let [redis (::redis/redis (::system/system request))
             auth-request (get @authentication-requests-store user-handle)
             _ (swap! authentication-requests-store dissoc user-handle)
-            {:keys [success? result]} (ceremony-result redis (get-in request [::system/system ::config/config ::config/hostname]) public-key-data auth-request)]
+            {:keys [success? result]} (ceremony-result redis
+                                                       (get-in request [::system/system ::config/config ::config/relying-party-id])
+                                                       (get-in request [:headers "origin"])
+                                                       public-key-data
+                                                       auth-request)]
         (if success?
           (do
             (redis/update-credential redis result)

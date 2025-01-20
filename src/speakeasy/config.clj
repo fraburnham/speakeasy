@@ -8,9 +8,9 @@
   {::file {::env-var "SPEAKEASY_EDN_FILE"
            ::default "speakeasy.edn"}
 
-   ::hostname {::env-var "SPEAKEASY_HOSTNAME"
-               ::config-location [:hostname]
-               ::default "localhost"}
+   ::relying-party-id {::env-var "SPEAKEASY_RELYING_PARTY_ID"
+                       ::config-location [:relying-party-id]
+                       ::default "localhost"}
 
    ::port {::env-var "SPEAKEASY_PORT"
            ::env-parser #(Integer/parseInt %)
@@ -38,13 +38,13 @@
       (deep-contains? (m (first ks)) (rest ks))
       false)))
 
-(defn resolve-value [env-map config-file-map {:keys [::env-var ::config-location ::default ::env-parser] :as location-map}]
+(defn resolve-value [env-map config-file-map {:keys [::env-var ::config-location ::default ::env-parser] :as location-info}]
   (let [env-parser (or env-parser identity)
-        env-val (if (and (contains? location-map ::env-var)
+        env-val (if (and (contains? location-info ::env-var)
                          (contains? env-map env-var))
                   (env-parser (get env-map env-var))
                   ::unset)
-        config-val (if (and (contains? location-map ::config-location)
+        config-val (if (and (contains? location-info ::config-location)
                             (deep-contains? config-file-map config-location))
                      (get-in config-file-map config-location)
                      ::unset)]
@@ -52,7 +52,7 @@
       (not= ::unset env-val) env-val
       (not= ::unset config-val) config-val
       :else (or default
-                (throw (ex-info "Unable to resolve config value" {::location-map location-map}))))))
+                (throw (ex-info "Unable to resolve config value" {::location-info location-info}))))))
 
 (defn get-config-file [env-map config-map]
   (let [config-file-path (resolve-value env-map {} (::file config-map))]
