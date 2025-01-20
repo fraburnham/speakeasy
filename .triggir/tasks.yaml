@@ -1,17 +1,23 @@
 ---
 - type: bash
+  task_name: docker-build
   body: |
-    echo "Docker build"
-    echo
+    set -xeuo pipefail
 
-    docker build -t "$DOCKER_REGISTRY/speakeasy:$CHECKOUT_SHA" .
-    docker run --entrypoint /bin/bash "$DOCKER_REGISTRY/speakeasy:$CHECKOUT_SHA" -- /app/test.sh
-    docker push "$DOCKER_REGISTRY/speakeasy:$CHECKOUT_SHA"
----
+    docker build -t "$DOCKER_REGISTRY/speakeasy:$AFTER" .
+    docker run --entrypoint /bin/bash "$DOCKER_REGISTRY/speakeasy:$AFTER" -- /app/test.sh
+    docker push "$DOCKER_REGISTRY/speakeasy:$AFTER"
+
 - type: bash
+  task_name: repo-sync
   body: |
+    set -xeuo pipefail
+
     [[ "$REF" != "refs/heads/main" ]] && { echo "Skipping sync not on main!"; exit 0; }
 
+    # TODO: solve this hack safe dir stuff
+    git config --global --add safe.directory "$PWD"
+
     git remote add github git@github.com:fraburnham/speakeasy
-    git push github "$CHECKOUT_SHA":refs/heads/main
+    git push github "$AFTER":refs/heads/main
     git push github --tags
